@@ -90,6 +90,8 @@ class Env():
 		# prev_node_embedding = tf.matmul(one_hot, self.node_embeddings)
 		prev_node_embedding = tf.gather(self.node_embeddings, indices = next_node, batch_dims = 1)
 
+        #这里要修改为prev_node_embedding+position_embedding
+		#每一步解码时，先将
 		context = tf.concat([prev_node_embedding, D[:,:,None]], axis = -1)
 		return mask, context, D
 
