@@ -56,14 +56,16 @@ class Env():
 		D = D - selected_demand * (1.0 - tf.cast(self.is_next_depot, tf.float32))
 		#顾客需求量超出，剩余车量容量
 		capacity_over_customer = self.demand > D
-		##将已经访问过的顾客和需求量超出车量剩余容量的顾客mask掉
+		##将已经访问过的顾客和需求量超出车量剩余容量的顾客mask掉，只是返回mask给使用，更新不用这个
+		##更新用的self.visited_customer
 		mask_customer = capacity_over_customer[:, :, None] | self.visited_customer
 
 		# print('mask_customer[0]', mask_customer[0])
 		#reduce_sum计算False数量，即有多少客户还没有被访问过；这里判断只要is_next_depot是仓库节点，且存在没有被访问的其它节点，就把仓库mask掉，
-		#否则就为False让车量可以返回拉货；如果
-		#is_next_depot为false即非仓库节点时，mask_depot为False,可以回到仓库
-		#或者mask_customer全为True时，即顾客节点都访问过了，mask_depot为False,可以回到仓库
+		# [意思是下一个节点是仓库，且有客户未被访问过，那么下下个节点一定是取访问客户，不会出现连续两次都是仓库节点]
+		#否则就为False让车量可以返回拉货；
+		#（1）is_next_depot为false即非仓库节点时，mask_depot为False,可以回到仓库
+		#（2）mask_customer全为True时，即顾客节点都访问过了，mask_depot为False,可以回到仓库
 
 		mask_depot = self.is_next_depot & (tf.reduce_sum(tf.cast(mask_customer == False, tf.int32), axis = 1) > 0)
 		# print('mask_depot', mask_depot[0])
@@ -91,7 +93,7 @@ class Env():
 		prev_node_embedding = tf.gather(self.node_embeddings, indices = next_node, batch_dims = 1)
 
         #这里要修改为prev_node_embedding+position_embedding
-		#每一步解码时，先将
+		#每一步解码时，先将首先判断该船能不能放下，如果不能的话就将该船mask掉，可以的话要返回位置坐标和剩余的空间
 		context = tf.concat([prev_node_embedding, D[:,:,None]], axis = -1)
 		return mask, context, D
 

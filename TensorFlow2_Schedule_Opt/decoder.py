@@ -103,7 +103,7 @@ class DecoderCell(tf.keras.models.Model):
 
 			# if tf.reduce_all(env.visited_customer):
 			# 	break
-
+        #这里是完成了所有的仓库送货才进行一次奖励，所以也是所有闸室都排完成了才进行一次奖励
 		pi = tf.transpose(tours.stack(), perm = (1,0))
 		ll = env.get_log_likelihood(tf.transpose(log_ps.stack(), perm = (1,0,2)), pi)
 		cost = env.get_costs(pi)
